@@ -31,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 // Configure CORS pour autoriser uniquement ton frontend Next.js
 app.use(
   cors({
-    origin: "http://localhost:3000", // adresse de dev Next.js
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: false, // on n’utilise pas (pour l’instant) de cookies/auth
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
@@ -105,6 +105,6 @@ app.use(
 
 // Démarrage du serveur
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
   scheduleJobs();
 });

@@ -12,23 +12,6 @@ export const eventRouter = express.Router();
 type EventInput = z.input<typeof createEventventSchema>;
 type EventOutput = z.output<typeof createEventventSchema>;
 
-// Schéma de validation (Zod)
-const EventSchema = z.object({
-  title: z.string().min(1),
-  category: z.string().optional(),
-  description: z.string().optional(),
-  date: z.string().refine((d) => !isNaN(Date.parse(d)), {
-    message: "Invalid date format",
-  }),
-  time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, {
-    message: "Time must be in HH:mm format",
-  }),
-  location: z.string().optional(),
-  link: z.string().url().optional(),
-  image: z.string().url().optional(),
-  source: z.string().optional(),
-});
-
 eventRouter.get("/", (async (req: Request, res: Response) => {
   const { cursor, limit, search, category, status } = req.query;
   const now = new Date();
@@ -182,7 +165,7 @@ eventRouter.post(
           time: formattedTimeRange || validated.timeStart || null,
           location: validated.location?.trim() || null,
           link: validated.link,
-          image: imageUrl,
+          image: imageUrl || "",
           source: validated.source || "manual",
           price: validated.price?.trim() || null,
           priceCurrency: validated.priceCurrency?.trim() || null,
