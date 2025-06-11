@@ -29,10 +29,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Configure CORS pour autoriser uniquement ton frontend Next.js
+const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:3000"];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: false, // on n’utilise pas (pour l’instant) de cookies/auth
+    origin: (origin, callback) => {
+      // // Autorise les outils comme Postman ou les scripts locaux
+      // if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: false,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
