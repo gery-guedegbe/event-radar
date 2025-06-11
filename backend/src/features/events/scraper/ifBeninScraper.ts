@@ -8,7 +8,7 @@ interface ScrapedEvent {
   time: string;
   location?: string;
   link?: string;
-  image?: string;
+  image: string;
   fullImage?: string;
   description?: string;
   source: string;
@@ -57,7 +57,7 @@ export async function scrapeIFBenin() {
           el
             .querySelector(".event-item-image img")
             ?.getAttribute("src")
-            ?.trim() || undefined;
+            ?.trim() || "";
 
         // titre
         const title = el.querySelector(".ev-title")?.textContent?.trim() || "";
@@ -85,7 +85,7 @@ export async function scrapeIFBenin() {
             date,
             time,
             link,
-            image: thumbnail,
+            image: thumbnail || "",
             source: "if-benin",
           });
         }
