@@ -25,8 +25,15 @@ const ShareButtons: FC<Props> = ({ url, title }) => {
 
   return (
     <div className="flex space-x-2">
-      <button onClick={() => popup(fbUrl)} aria-label="Partager sur Facebook">
-        <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24">
+      <button
+        onClick={() => popup(fbUrl)}
+        aria-label="Partager sur Facebook"
+        className="cursor-pointer"
+      >
+        <svg
+          className="text-light-primary dark:text-dark-primary h-5 w-5 lg:h-8 lg:w-8"
+          viewBox="0 0 24 24"
+        >
           {/* icône FB */}
           <path
             fill="currentColor"
@@ -38,8 +45,12 @@ const ShareButtons: FC<Props> = ({ url, title }) => {
       <button
         onClick={() => popup(twitterUrl)}
         aria-label="Partager sur Twitter"
+        className="cursor-pointer"
       >
-        <svg className="h-5 w-5 text-blue-400" viewBox="0 0 24 24">
+        <svg
+          className="text-light-primary dark:text-dark-primary h-5 w-5 lg:h-8 lg:w-8"
+          viewBox="0 0 24 24"
+        >
           {/* icône Twitter */}
           <path
             fill="currentColor"
@@ -51,8 +62,12 @@ const ShareButtons: FC<Props> = ({ url, title }) => {
       <button
         onClick={() => popup(linkedinUrl)}
         aria-label="Partager sur LinkedIn"
+        className="cursor-pointer"
       >
-        <svg className="h-5 w-5 text-blue-700" viewBox="0 0 24 24">
+        <svg
+          className="text-light-primary dark:text-dark-primary h-5 w-5 lg:h-8 lg:w-8"
+          viewBox="0 0 24 24"
+        >
           {/* icône LinkedIn */}
           <path
             fill="currentColor"

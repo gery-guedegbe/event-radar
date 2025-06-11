@@ -9,19 +9,26 @@ import { prisma, supabase } from "./config/db";
 import { eventRouter } from "./api/events";
 import { scrapeRouter } from "./api/scrape";
 import { scheduleJobs } from "./utils/cron";
+import { uploadRouter } from "./api/upload";
+
+const multer = require("multer");
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// 1) Enlève l’en-tête X-Powered-By pour masquer qu’on utilise Express
+// Enlève l’en-tête X-Powered-By pour masquer qu’on utilise Express
 app.disable("x-powered-by");
 
-// 2) Sécurise les headers HTTP
+// Sécurise les headers HTTP
 app.use(helmet());
 
-// 3) Configure CORS pour autoriser uniquement ton frontend Next.js
+app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+
+// Configure CORS pour autoriser uniquement ton frontend Next.js
 app.use(
   cors({
     origin: "http://localhost:3000", // adresse de dev Next.js
@@ -30,7 +37,12 @@ app.use(
   })
 );
 
-// 4) Limite le nombre de requêtes / IP (anti-brute-force / DDoS léger)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+// imite le nombre de requêtes / IP (anti-brute-force / DDoS léger)
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -40,25 +52,32 @@ app.use(
   })
 );
 
-// 5) Limite la taille du body JSON pour éviter les payloads géants
-app.use(express.json({ limit: "100kb" }));
-
-// 6) Middleware pour vérifier la connexion à la base
+// Middleware pour vérifier la connexion à la base
 app.use(async (req, res, next) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     next();
-  } catch (error) {
-    console.error("Database connection error:", error);
-    res.status(500).json({ error: "Database connection failed" });
+  } catch (error: any) {
+    console.error("Database connection error details:", {
+      error: error.message,
+      databaseUrl: process.env.DATABASE_URL?.replace(
+        /\/\/.*@/,
+        "//[REDACTED]@"
+      ), // Masque le mot de passe dans les logs
+    });
+    res.status(500).json({
+      error: "Database connection failed",
+      details: "Check server logs for more information",
+    });
   }
 });
 
-// 7) Routes publiques (événements & scraping)
+// Routes publiques (événements & scraping)
 app.use("/api/events", eventRouter);
+app.use("/api/upload", uploadRouter);
 app.use("/api/scrape", scrapeRouter);
 
-// 8) Health check
+// Health check
 app.get("/health", async (_req, res) => {
   const dbStatus = await prisma.$queryRaw`SELECT 1`
     .then(() => "connected")
@@ -71,12 +90,12 @@ app.get("/health", async (_req, res) => {
   });
 });
 
-// 9) Gestion des erreurs 404
+// Gestion des erreurs 404
 app.use((_req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
 
-// 10) Gestion d’erreur générique
+// Gestion d’erreur générique
 app.use(
   (err: any, _req: express.Request, res: express.Response, _next: any) => {
     console.error("Unhandled error:", err);
@@ -84,7 +103,7 @@ app.use(
   }
 );
 
-// 11) Démarrage du serveur
+// Démarrage du serveur
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   scheduleJobs();

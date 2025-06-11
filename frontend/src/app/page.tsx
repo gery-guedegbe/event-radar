@@ -1,83 +1,138 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useInfiniteEvents } from "../hooks/useInfiniteEvents";
 import EventCard from "../components/EventCard";
 import SearchBar from "../components/SearchBar";
 import Filters from "../components/Filters";
 import { EventFilter } from "../types/event";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function Home() {
-  // **1) État des filtres / Recherche**
-  const [search, setSearch] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
-  const [status, setStatus] = useState<"all" | "upcoming" | "past">("upcoming");
-  const [isLoading, setIsLoading] = useState(false);
+  const [filters, setFilters] = useState<EventFilter>({
+    search: "",
+    category: "",
+    status: "all",
+  });
 
-  const filters: EventFilter = { search, category, status };
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteEvents({
+    limit: 12,
+    filters,
+  });
 
-  // **2) Hook infiniteQuery**
-  const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteEvents({ limit: 10, filters });
+  const handleSearch = useCallback((search: string) => {
+    setFilters((prev) => ({ ...prev, search }));
+  }, []);
 
-  // Concaténer toutes les pages
-  const allEvents = data?.pages.flatMap((page) => page.items || []) || [];
+  const handleCategoryChange = useCallback((category: string) => {
+    setFilters((prev) => ({ ...prev, category }));
+  }, []);
 
-  // **3) Déclencher le chargement supplémentaire au scroll**
-  const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
-    if (isLoading) return;
+  const handleStatusChange = useCallback(
+    (status: "all" | "upcoming" | "past") => {
+      setFilters((prev) => ({ ...prev, status }));
+    },
+    [],
+  );
 
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (
-      scrollHeight - scrollTop <= clientHeight + 100 &&
-      hasNextPage &&
-      !isFetchingNextPage
-    ) {
-      setIsLoading(true);
-      await fetchNextPage();
-      setIsLoading(false);
-    }
-  };
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  const lastEventRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (isFetchingNextPage) return;
+
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        },
+        { threshold: 0.1 },
+      );
+
+      if (node) observer.current.observe(node);
+    },
+    [isFetchingNextPage, hasNextPage, fetchNextPage],
+  );
+
+  const allEvents = data?.pages.flatMap((page) => page.items) || [];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        {/* Recherche + Filtres */}
-        <div className="sticky top-10 mb-6 flex flex-col items-start justify-between space-y-4 md:flex-row md:items-center md:space-y-0">
-          <SearchBar value={search} onChange={setSearch} />
+    <div className="flex min-h-screen w-full flex-col space-y-6 lg:space-y-8">
+      <div className="my-8 flex flex-col items-center gap-3 text-center lg:mb-10 lg:gap-4">
+        <h1 className="text-light-heading dark:text-dark-heading text-4xl font-bold md:text-5xl">
+          Découvrez des Événements Incroyables
+        </h1>
+
+        <p className="text-light-text dark:text-dark-text max-w-2xl text-xl">
+          Trouvez et explorez les meilleurs événements qui se déroulent autour
+          de vous. Des conférences tech aux ateliers créatifs.
+        </p>
+      </div>
+
+      <div className="w-full">
+        {/* Barre de recherche et filtres */}
+        <div className="mx-auto mb-8 flex w-full max-w-3xl flex-col items-center justify-between space-y-4 lg:mb-12">
+          <SearchBar
+            value={filters.search}
+            onChange={handleSearch}
+            placeholder="Rechercher des événements..."
+          />
 
           <Filters
-            category={category}
-            onCategoryChange={setCategory}
-            status={status}
-            onStatusChange={setStatus}
+            category={filters.category}
+            onCategoryChange={handleCategoryChange}
+            status={filters.status}
+            onStatusChange={handleStatusChange}
+            events={allEvents}
           />
         </div>
 
-        {/* Liste (infinite scroll) */}
-        <div
-          className="grid grid-cols-1 gap-6 overflow-auto sm:grid-cols-2 lg:grid-cols-3"
-          onScroll={handleScroll}
-        >
-          {allEvents.length > 0 ? (
-            allEvents.map((evt) => <EventCard key={evt.id} event={evt} />)
-          ) : (
-            <div className="col-span-full py-4 text-center">
-              Aucun événement trouvé
-            </div>
-          )}
+        {/* Liste des événements */}
+        {error ? (
+          <div className="text-center text-red-500">
+            Erreur: {error.message}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {allEvents.map((event, index) => (
+              <div
+                ref={index === allEvents.length - 1 ? lastEventRef : null}
+                key={`${event.id}-${index}`}
+              >
+                <EventCard event={event} />
+              </div>
+            ))}
+          </div>
+        )}
 
-          {isFetchingNextPage && (
-            <div className="col-span-full py-4 text-center">Chargement...</div>
-          )}
-          {!hasNextPage && (
-            <div className="col-span-full py-4 text-center text-gray-400">
-              Plus d’événements à afficher
-            </div>
-          )}
-        </div>
+        {/* États de chargement */}
+        {(isFetchingNextPage || isFetching) && (
+          <div className="mt-8 flex justify-center">
+            <LoadingSpinner />
+          </div>
+        )}
 
-        {error && <p className="mt-4 text-red-500">Erreur : {error.message}</p>}
+        {!hasNextPage && allEvents.length > 0 && (
+          <div className="text-light-text dark:text-dark-text mt-4 text-center text-sm lg:text-base">
+            Vous avez atteint la fin de la liste
+          </div>
+        )}
+
+        {!isFetching && allEvents.length === 0 && (
+          <div className="text-light-text dark:text-dark-text mt-4 text-center text-sm lg:text-base">
+            Aucun événement trouvé avec ces critères
+          </div>
+        )}
       </div>
     </div>
   );

@@ -2,46 +2,52 @@
 
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Custom Colors */
-  --color-yellow: #ffc805;
-  --color-pure-white: #ffffff;
-  --color-white-2: #fafafa;
-  --color-success: #65c18c;
+  /* ========= Custom Colors ========= */
 
-  /* Primary */
-  --color-primary: #0066ff;
-  --color-primary-50: #e6f0ff;
-  --color-primary-100: #b0d0ff;
-  --color-primary-200: #8ab9ff;
-  --color-primary-300: #5498ff;
-  --color-primary-400: #3385ff;
-  --color-primary-500: #0066ff;
-  --color-primary-600: #005de8;
-  --color-primary-700: #0048b5;
-  --color-primary-800: #00388c;
-  --color-primary-900: #002b6b;
+  /* ===== Light Theme ===== */
+  --color-light-background: #ffffff;
+  --color-light-foreground: #f9fafb;
+  --color-light-text: #374151;
+  --color-light-subtext: #6b7280;
+  --color-light-heading: #111827;
+  --color-light-muted: #f3f4f6;
+  --color-light-border: #e5e7eb;
+  --color-light-card: #f9fafb;
 
-  /* Neutral */
-  --color-neutral-50: #edeef0;
-  --color-neutral-100: #edeef0;
-  --color-neutral-200: #aab1ba;
-  --color-neutral-300: #848d9b;
-  --color-neutral-400: #6c7787;
-  --color-neutral-500: #475569;
-  --color-neutral-600: #414d60;
-  --color-neutral-700: #323c4b;
-  --color-neutral-800: #272f3a;
-  --color-neutral-900: #1e242c;
+  --color-light-primary: #2563eb; /* Blue */
+  --color-light-secondary: #7c3aed; /* Violet */
+  --color-light-success: #16a34a; /* Green */
+  --color-light-error: #dc2626; /* Red */
+  --color-light-warning: #d97706; /* Amber */
 
-  /* Custom Breakpoint */
+  /* ===== Dark Theme ===== */
+
+  --color-dark-background: #0f172a;
+  --color-dark-foreground: #1e293b;
+  --color-dark-text: #cbd5e1;
+  --color-dark-subtext: #94a3b8;
+  --color-dark-heading: #f1f5f9;
+  --color-dark-muted: #1e293b;
+  --color-dark-border: #334155;
+  --color-dark-card: #1e293b;
+
+  --color-dark-primary: #3b82f6;
+  --color-dark-secondary: #8b5cf6;
+  --color-dark-success: #22c55e;
+  --color-dark-error: #ef4444;
+  --color-dark-warning: #f59e0b;
+
+  /* ========= Custom Breakpoints ========= */
   --breakpoint-mediumDesktop: 1600px;
   --breakpoint-ultraDesktop: 2000px;
-  --breakpoint-ultraLargDesktop: 3000px;
+  --breakpoint-ultraLargeDesktop: 3000px;
+}
+
+body {
+  @apply transition-colors duration-200;
 }
 
 html,
@@ -49,10 +55,8 @@ body {
   max-width: 100%;
   min-height: 100vh;
   scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
-  background: var(--background);
   font-family: "Manrope", sans-serif;
 }

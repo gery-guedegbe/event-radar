@@ -9,7 +9,7 @@ export interface Event {
   endDate?: string; // ISO string
   location?: string;
   link: string;
-  image?: string;
+  image?: File | string;
   price?: string;
   priceCurrency?: string;
   source: string;

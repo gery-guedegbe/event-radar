@@ -7,27 +7,39 @@ interface QueryParams {
   filters: EventFilter;
 }
 
+interface EventsResponse {
+  data: Event[];
+  pagination: {
+    hasMore: boolean;
+    cursor: string | null;
+  };
+}
+
 export function useInfiniteEvents({ limit, filters }: QueryParams) {
   return useInfiniteQuery({
-    queryKey: ["events", filters] as const,
+    queryKey: ["events", filters],
     queryFn: async ({ pageParam = null }: { pageParam: string | null }) => {
-      const params = new URLSearchParams();
-      params.set("limit", limit.toString());
-      if (filters.category) params.set("category", filters.category);
-      if (filters.status) params.set("status", filters.status);
-      if (filters.search) params.set("search", filters.search);
-      if (pageParam) params.set("cursor", pageParam);
+      const params = new URLSearchParams({
+        limit: limit.toString(),
+        ...(filters.search && { search: filters.search }),
+        ...(filters.category && { category: filters.category }),
+        ...(filters.status && { status: filters.status }),
+        ...(pageParam && { cursor: pageParam }),
+      });
 
       const url = `${API_BASE}/api/events?${params.toString()}`;
-      const response = await fetcher<Event[]>(url);
+      const response = await fetcher<EventsResponse>(url);
 
       return {
-        items: response,
-        nextCursor:
-          response.length > 0 ? response[response.length - 1].id : null,
+        items: response.data,
+        nextCursor: response.pagination.cursor,
+        hasMore: response.pagination.hasMore,
       };
     },
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextCursor : undefined,
     initialPageParam: null,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 }

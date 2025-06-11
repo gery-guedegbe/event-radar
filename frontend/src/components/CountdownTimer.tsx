@@ -31,7 +31,7 @@ const CountdownTimer: FC<Props> = ({ targetDate }) => {
   }
 
   return (
-    <div className="text-sm text-yellow-300">
+    <div className="text-light-warning dark:text-light-warning flex items-center gap-1.5 text-base font-medium lg:text-lg">
       <span>{timeLeft.days}j </span>
       <span>{timeLeft.hours}h </span>
       <span>{timeLeft.minutes}m </span>

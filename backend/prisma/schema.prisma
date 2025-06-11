@@ -17,7 +17,7 @@ model Event {
  time          String?
  location      String?
  link          String?
- image         String?
+ image         String
  price         String?
  priceCurrency String?
  source        String?

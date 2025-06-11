@@ -1,34 +1,69 @@
-// src/utils/cron.ts
+// utils/cron.ts
 import cron from "node-cron";
 import fetch from "node-fetch";
+import { AbortController } from "node-abort-controller";
 
 export function scheduleJobs() {
-  // Toutes les 6 heures : lancer le scraping
-  cron.schedule("0 */6 * * *", async () => {
-    console.log("Running scheduled scraping...");
-    try {
-      await fetch(
-        `${process.env.BASE_URL || "http://localhost:" + process.env.PORT}/api/scrape`
-      );
+  // Toutes les 2 minutes (pour test - configurable via env)
+  cron.schedule(process.env.SCRAPE_CRON || "0 */6 * * *", async () => {
+    console.log(`[${new Date().toISOString()}] Running scheduled scraping...`);
 
-      console.log("Scraping job completed.");
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const port = process.env.PORT || 4000;
+      const baseUrl = process.env.API_BASE_URL || `http://localhost:${port}`;
+
+      const response = await fetch(`${baseUrl}/api/scrape`, {
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      console.log(`[${new Date().toISOString()}] Scraping job completed.`);
     } catch (err) {
-      console.error("Error during scheduled scrape:", err);
+      console.error(
+        `[${new Date().toISOString()}] Scrape error:`,
+        err instanceof Error ? err.message : err
+      );
+    } finally {
+      clearTimeout(timeout);
     }
   });
 
-  // Tous les jours à minuit : cleanup > 30 jours
+  // Cleanup quotidien
   cron.schedule("0 0 * * *", async () => {
-    console.log("Running scheduled cleanup...");
-    try {
-      await fetch(
-        `${process.env.BASE_URL || "http://localhost:" + process.env.PORT}/api/events/cleanup`,
-        { method: "DELETE" }
-      );
+    console.log(`[${new Date().toISOString()}] Running cleanup...`);
 
-      console.log("Cleanup job completed.");
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const port = process.env.PORT || 4000;
+      const baseUrl = process.env.API_BASE_URL || `http://localhost:${port}`;
+
+      const response = await fetch(`${baseUrl}/api/events/cleanup`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+
+      console.log(`[${new Date().toISOString()}] Cleanup completed`);
     } catch (err) {
-      console.error("Error during scheduled cleanup:", err);
+      console.error(
+        `[${new Date().toISOString()}] Cleanup error:`,
+        err instanceof Error ? err.message : err
+      );
+    } finally {
+      clearTimeout(timeout);
     }
   });
 }

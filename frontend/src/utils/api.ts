@@ -36,3 +36,56 @@ export async function fetchEventById(id: string): Promise<Event | null> {
     return null;
   }
 }
+
+export const uploadImage = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE}/api/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Upload failed");
+  }
+
+  const { url } = await res.json();
+  return url;
+};
+
+// Remplace le typage du paramètre de createEvent pour accepter un Event sans id
+export const createEvent = async (data: Omit<Event, "id">) => {
+  try {
+    // Si vous avez une image à uploader
+    let imageUrl = "";
+
+    if (data.image instanceof File) {
+      imageUrl = await uploadImage(data.image);
+      data.image = imageUrl;
+    } else if (typeof data.image === "string") {
+      imageUrl = data.image;
+    }
+
+    console.log("Payload envoyé au backend:", data);
+
+    const res = await fetch(`${API_BASE}/api/events/create-event`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Erreur lors de la création");
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("Error creating event:", error);
+    throw error;
+  }
+};

@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       "if-benin.com",
       "www.if-benin.com",
       "www.events-booster.com",
+      "uopujgrfvaxfdrzqlwdm.supabase.co",
     ],
 
     // OU méthode plus flexible avec des patterns (recommandée)
@@ -30,6 +31,11 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "www.events-booster.com",
+        pathname: "/wp-content/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "www.uopujgrfvaxfdrzqlwdm.supabase.co",
         pathname: "/wp-content/uploads/**",
       },
     ],

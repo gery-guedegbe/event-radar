@@ -1,10 +1,16 @@
 import express from "express";
-import type { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction, RequestHandler } from "express";
 
-import { supabase, prisma } from "../config/db";
 import { z } from "zod";
 
+import { supabase, prisma } from "../config/db";
+
+import { createEventventSchema } from "../types/creatEventSchema";
+
 export const eventRouter = express.Router();
+
+type EventInput = z.input<typeof createEventventSchema>;
+type EventOutput = z.output<typeof createEventventSchema>;
 
 // Schéma de validation (Zod)
 const EventSchema = z.object({
@@ -23,23 +29,97 @@ const EventSchema = z.object({
   source: z.string().optional(),
 });
 
-// 1. GET /api/events - Liste des événements (≤ 30 jours)
-eventRouter.get("/", async (req: Request, res: Response) => {
+eventRouter.get("/", (async (req: Request, res: Response) => {
+  const { cursor, limit, search, category, status } = req.query;
   const now = new Date();
-  const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const take = parseInt(limit as string, 10) || 12;
+
+  // Construction des filtres communs
+  let baseWhere: any = {};
+
+  if (search) {
+    baseWhere.OR = [
+      { title: { contains: search as string, mode: "insensitive" } },
+      { description: { contains: search as string, mode: "insensitive" } },
+    ];
+  }
+
+  if (category) {
+    baseWhere.category = category;
+  }
 
   try {
-    const events = await prisma.event.findMany({
-      where: { date: { gte: cutoff } },
-      orderBy: { date: "asc" },
-    });
+    // Si un statut est précisé, on filtre normalement
+    if (status === "upcoming" || status === "past") {
+      const isUpcoming = status === "upcoming";
+      const events = await prisma.event.findMany({
+        where: {
+          ...baseWhere,
+          date: isUpcoming ? { gte: now } : { lt: now },
+        },
+        orderBy: {
+          date: isUpcoming ? "asc" : "desc",
+        },
+        ...(cursor && {
+          skip: 1,
+          cursor: {
+            id: cursor as string,
+          },
+        }),
+        take,
+      });
 
-    res.json(events);
+      return res.json({
+        data: events,
+        pagination: {
+          hasMore: events.length === take,
+          cursor: events.length > 0 ? events[events.length - 1].id : null,
+        },
+      });
+    }
+
+    // Sinon (status all ou absent), on combine upcoming + past
+    const [upcomingEvents, pastEvents] = await Promise.all([
+      prisma.event.findMany({
+        where: {
+          ...baseWhere,
+          date: { gte: now },
+        },
+        orderBy: { date: "asc" },
+      }),
+      prisma.event.findMany({
+        where: {
+          ...baseWhere,
+          date: { lt: now },
+        },
+        orderBy: { date: "desc" },
+      }),
+    ]);
+
+    const allEvents = [...upcomingEvents, ...pastEvents];
+
+    // Pagination manuelle si nécessaire
+    let startIndex = 0;
+    if (cursor) {
+      const index = allEvents.findIndex((event) => event.id === cursor);
+      startIndex = index >= 0 ? index + 1 : 0;
+    }
+
+    const paginated = allEvents.slice(startIndex, startIndex + take);
+
+    res.json({
+      data: paginated,
+      pagination: {
+        hasMore: startIndex + take < allEvents.length,
+        cursor:
+          paginated.length > 0 ? paginated[paginated.length - 1].id : null,
+      },
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching events:", error);
     res.status(500).json({ error: "Failed to fetch events" });
   }
-});
+}) as RequestHandler);
 
 // 2. GET /api/events/:id - Récupérer un événement spécifique
 eventRouter.get("/:id", async (req: Request, res: Response): Promise<any> => {
@@ -61,27 +141,55 @@ eventRouter.get("/:id", async (req: Request, res: Response): Promise<any> => {
   }
 });
 
+// POST /api/events - Créer un nouvel événement
 eventRouter.post(
-  "/",
-  async (req: Request, res: Response, _next: NextFunction) => {
+  "/create-event",
+  async (req: Request, res: Response): Promise<any> => {
     try {
-      const validated = EventSchema.parse(req.body);
+      const rawData = req.body as EventInput;
+      const validated = createEventventSchema.parse(rawData);
+
+      // Fusionne date et heure de début pour un vrai timestamp
+      let eventDate = new Date(validated.date);
+
+      if (validated.timeStart) {
+        const [hours, minutes] = validated.timeStart.split(":");
+
+        eventDate.setHours(Number(hours), Number(minutes), 0, 0);
+      }
+
+      console.log("Requête reçue - Body:", req.body);
+
+      // Format des heures : "19h - 20h"
+      let formattedTimeRange = "";
+
+      if (validated.timeStart && validated.timeEnd) {
+        const [hStart] = validated.timeStart.split(":");
+        const [hEnd] = validated.timeEnd.split(":");
+        formattedTimeRange = `${hStart}h - ${hEnd}h`;
+      }
+
+      // Correction : forcer image à string ou null
+      const imageUrl =
+        typeof validated.image === "string" ? validated.image : null;
 
       const newEvent = await prisma.event.create({
         data: {
           title: validated.title,
           category: validated.category,
-          description: validated.description,
-          date: new Date(validated.date),
-          time: validated.time,
-          location: validated.location,
+          description: validated.description?.trim() || null,
+          date: eventDate,
+          time: formattedTimeRange || validated.timeStart || null,
+          location: validated.location?.trim() || null,
           link: validated.link,
-          image: validated.image,
-          source: validated.source,
+          image: imageUrl,
+          source: validated.source || "manual",
+          price: validated.price?.trim() || null,
+          priceCurrency: validated.priceCurrency?.trim() || null,
+          type: validated.type,
         },
       });
 
-      // Notification temps réel (optionnel)
       await supabase.channel("events").send({
         type: "broadcast",
         event: "new-event",
@@ -89,12 +197,21 @@ eventRouter.post(
       });
 
       res.status(201).json(newEvent);
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ errors: error.errors });
-        return;
+        return res.status(400).json({
+          error: "Validation failed",
+          details: error.errors.map((e) => ({
+            path: e.path.join("."),
+            message: e.message,
+          })),
+        });
       }
-      res.status(500).json({ error: "Failed to create event" });
+
+      console.error("Erreur lors de la création d'événement:", error);
+      return res
+        .status(500)
+        .json({ error: "Échec de la création de l'événement" });
     }
   }
 );
