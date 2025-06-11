@@ -4,9 +4,8 @@ import { prisma } from "../../../config/db";
 interface ScrapedEvent {
   title: string;
   description?: string;
-  date: string; // ex: "2025-06-04"
-  endDate?: string; // ex: "2025-06-04"
-  // NB : on remontera `time`, `location`, `category`, `price`, `priceCurrency`, `type` depuis la page détail
+  date: string;
+  endDate?: string;
   link: string;
   image?: string;
   source: "events-booster";
@@ -66,7 +65,7 @@ export async function scrapeEventBooster() {
           if (data["@type"] !== "Event") return;
 
           const title = data.name || "";
-          const description = data.description;
+          const description = data.description || "";
           const startDateString = data.startDate || "";
           const endDateString = data.endDate;
           const link = data.url || "";

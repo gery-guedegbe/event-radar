@@ -199,7 +199,7 @@ export async function scrapeCultures() {
               .filter((txt) => txt.length > 0)
               .join("\n\n");
           });
-          fullDescription = desc || null;
+          fullDescription = desc || "";
         } catch {
           console.warn(
             `ℹ️ Pas de ".em-event-content" trouvé pour "${ev.title}".`

@@ -42,7 +42,7 @@ async function scrapeEventBooster() {
                     if (data["@type"] !== "Event")
                         return;
                     const title = data.name || "";
-                    const description = data.description;
+                    const description = data.description || "";
                     const startDateString = data.startDate || "";
                     const endDateString = data.endDate;
                     const link = data.url || "";

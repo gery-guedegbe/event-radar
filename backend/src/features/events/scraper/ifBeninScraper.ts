@@ -187,7 +187,7 @@ export async function scrapeIFBenin() {
             });
             description = await detailPage.$eval(
               ".post-content",
-              (el) => el.textContent?.trim() || undefined
+              (el) => el.textContent?.trim() || ""
             );
           } catch {
             console.warn(`⚠️ Pas de .post-content pour "${e.title}"`);

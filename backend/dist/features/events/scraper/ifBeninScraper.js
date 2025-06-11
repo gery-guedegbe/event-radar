@@ -134,7 +134,7 @@ async function scrapeIFBenin() {
                         await detailPage.waitForSelector(".post-content", {
                             timeout: 10000,
                         });
-                        description = await detailPage.$eval(".post-content", (el) => el.textContent?.trim() || undefined);
+                        description = await detailPage.$eval(".post-content", (el) => el.textContent?.trim() || "");
                     }
                     catch {
                         console.warn(`⚠️ Pas de .post-content pour "${e.title}"`);
