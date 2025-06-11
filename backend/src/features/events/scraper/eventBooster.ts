@@ -7,7 +7,7 @@ interface ScrapedEvent {
   date: string;
   endDate?: string;
   link: string;
-  image?: string;
+  image: string;
   source: "events-booster";
 }
 
@@ -69,7 +69,7 @@ export async function scrapeEventBooster() {
           const startDateString = data.startDate || "";
           const endDateString = data.endDate;
           const link = data.url || "";
-          const image = data.image;
+          const image = data.image || "";
 
           results.push({
             title,
@@ -226,7 +226,7 @@ export async function scrapeEventBooster() {
           time: detailTime || null,
           location: detailLocation || null,
           link: ev.link,
-          image: ev.image || null,
+          image: ev.image,
           price: detailPrice || null,
           priceCurrency: detailPriceCurrency || null,
           source: ev.source,

@@ -3,7 +3,7 @@ import { prisma } from "../../../config/db";
 
 interface ScrapedEvent {
   title: string;
-  thumbnail?: string;
+  thumbnail: string;
   link: string;
   rawDate: string;
   time?: string;
@@ -54,7 +54,7 @@ export async function scrapeCultures() {
           // 4.1 Thumbnail
           const thumbEl =
             card.querySelector<HTMLImageElement>(".em-item-image img");
-          const thumbnail = thumbEl?.getAttribute("src")?.trim() || undefined;
+          const thumbnail = thumbEl?.getAttribute("src")?.trim() || "";
 
           // 4.2 Title + link
           const aTitle =
