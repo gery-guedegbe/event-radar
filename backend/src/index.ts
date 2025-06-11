@@ -34,8 +34,8 @@ const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:3000"];
 app.use(
   cors({
     origin: (origin, callback) => {
-      // // Autorise les outils comme Postman ou les scripts locaux
-      // if (!origin) return callback(null, true);
+      // Autorise les outils comme Postman ou les scripts locaux
+      if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);

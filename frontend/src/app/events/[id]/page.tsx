@@ -10,9 +10,11 @@ import { ArrowLeft, Calendar, MapPin, Ticket, TimerIcon } from "lucide-react";
 export default async function EventDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
+  const { id } = params;
+
+  // console.log(`L'id de l'event: ${id}`);
 
   const event = await fetchEventById(id);
 
@@ -81,7 +83,7 @@ export default async function EventDetailPage({
                   Description
                 </h3>
 
-                <p className="text-light-text dark:text-dark-text max-w-2xl text-sm lg:text-base">
+                <p className="text-light-text dark:text-dark-text max-w-2xl text-sm break-words lg:text-base">
                   {event.description}
                 </p>
               </div>
