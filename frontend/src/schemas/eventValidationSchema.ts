@@ -14,7 +14,7 @@ export const eventValidationSchema = Yup.object({
   priceCurrency: Yup.string()
     .nullable()
     .when("price", (price, schema) =>
-      price && price.trim() !== ""
+      price.toString() !== ""
         ? schema.required("Devise requise si prix fourni")
         : schema,
     ),

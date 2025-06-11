@@ -7,15 +7,12 @@ import ShareButtons from "../../../components/ShareButtons";
 import Link from "next/link";
 import { ArrowLeft, Calendar, MapPin, Ticket, TimerIcon } from "lucide-react";
 
-interface Props {
-  params: {
-    id: string;
-  };
-}
-
-export default async function EventDetailPage({ params }: Props) {
-  // Extraction asynchrone de l'ID
-  const id = await Promise.resolve(params.id);
+export default async function EventDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
   const event = await fetchEventById(id);
 
