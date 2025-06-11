@@ -237,7 +237,7 @@ export async function scrapeCultures() {
           time: ev.time || null,
           location: ev.location || null,
           link: ev.link,
-          image: fullImageUrl || ev.thumbnail || null,
+          image: fullImageUrl || ev.thumbnail,
           price: null, // Cultures&P ne fournit pas explicitement de prix
           priceCurrency: null,
           source: ev.source,
