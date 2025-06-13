@@ -42,11 +42,11 @@ const ShareModal = ({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="dark:bg-dark-background relative w-full max-w-sm cursor-pointer space-y-4 rounded-lg bg-white p-6 shadow-xl"
+            className="dark:bg-dark-background relative w-full max-w-sm space-y-4 rounded-lg bg-white p-6 shadow-xl"
           >
             <button
               onClick={() => setIsModalOpen(false)}
-              className="text-dark-foreground dark:text-light-foreground absolute top-3 right-3 hover:opacity-70"
+              className="text-dark-foreground dark:text-light-foreground absolute top-3 right-3 cursor-pointer hover:opacity-70"
             >
               <X />
             </button>
