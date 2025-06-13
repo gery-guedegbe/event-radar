@@ -36,8 +36,14 @@ const ShareModal = ({
     <div>
       {/* MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="dark:bg-dark-background relative w-full max-w-sm space-y-4 rounded-lg bg-white p-6 shadow-xl">
+        <div
+          onClick={() => setIsModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="dark:bg-dark-background relative w-full max-w-sm space-y-4 rounded-lg bg-white p-6 shadow-xl"
+          >
             <button
               onClick={() => setIsModalOpen(false)}
               className="text-dark-foreground dark:text-light-foreground absolute top-3 right-3 hover:opacity-70"

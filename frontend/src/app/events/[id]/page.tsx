@@ -6,6 +6,7 @@ import CountdownTimer from "../../../components/CountdownTimer";
 import ShareButtons from "../../../components/ShareButtons";
 import Link from "next/link";
 import { ArrowLeft, Calendar, MapPin, Ticket, TimerIcon } from "lucide-react";
+import CleanDescription from "@/components/CleanDescription";
 
 export default async function EventDetailPage({
   params,
@@ -83,9 +84,9 @@ export default async function EventDetailPage({
                   Description
                 </h3>
 
-                <p className="text-light-text dark:text-dark-text max-w-2xl text-sm break-words lg:text-base">
-                  {event.description}
-                </p>
+                {event.description && typeof event.description === "string" && (
+                  <CleanDescription description={event.description} />
+                )}
               </div>
 
               <ShareButtons url={eventUrl} title={event.title} />
