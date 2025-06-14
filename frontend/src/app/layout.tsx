@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import "@styles/globals.css";
 
 import Providers from "@/providers";
+import { Analytics } from "@vercel/analytics/next";
+
 import { ThemeProvider } from "@/context/ThemeContext";
 import Navbar from "@/components/Navbar/Navbar";
 
@@ -60,6 +62,8 @@ export default function RootLayout({
               {children}
             </main>
           </Providers>
+
+          <Analytics />
         </body>
       </ThemeProvider>
     </html>
