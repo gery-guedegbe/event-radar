@@ -75,7 +75,8 @@ export default function Home() {
 
         <p className="text-light-text dark:text-dark-text max-w-2xl text-xl">
           Trouvez et explorez les meilleurs événements qui se déroulent autour
-          de vous. Des conférences tech aux ateliers créatifs.
+          de vous: conférences tech, ateliers créatifs, rencontres culturelles
+          et bien plus encore.
         </p>
       </div>
 
